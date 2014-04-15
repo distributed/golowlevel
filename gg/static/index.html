@@ -1,0 +1,69 @@
+<html>
+<head>
+	<title>The Googly Eyed Gopher</title>
+
+	<script type="text/javascript" src="jquery-1.11.0.js"></script>
+
+	<script type="text/javascript">
+		$(function() {
+			var size = 512;
+
+			var ang = 0.0;
+
+			var canvas = document.getElementById("canvas");
+			var ctx = canvas.getContext("2d");
+
+			var sock = new WebSocket("ws://" + window.location.hostname + ":" + window.location.port + "/posit");
+
+			var draw = function(x, y, ang) {
+				var pl = document.getElementById("pupil");
+
+				ctx.save();
+				ctx.translate(x, y);
+				ctx.rotate(ang);
+
+				ctx.drawImage(pl, 0, 0);
+				ctx.restore();
+
+				// debug
+				ctx.save();
+				ctx.fillStyle="red";
+				ctx.strokeRect(x, y, 1, 1);
+				ctx.restore();
+			};
+
+			sock.onmessage = function(ev) {
+				var msg = $.parseJSON(ev.data);
+
+				var mag = 3 / 4 * Math.PI;
+				var pupiloffset = 3 / 4 * Math.PI;
+				var ang = -pupiloffset + (msg.Position - 0.5) * mag * 2;
+
+				var zg = document.getElementById("zombiegopher");
+				ctx.drawImage(zg, 0, 0);
+				draw(158, 102, ang);
+				draw(260, 53, ang);
+			};
+
+			/*window.setInterval(function() {
+				var zg = document.getElementById("zombiegopher");
+				ctx.drawImage(zg, 0, 0);
+
+
+				draw(158, 102, ang);
+				draw(260, 53, ang);
+				ang += 0.1;
+			}, 100);*/
+		});
+	</script>
+
+</head>
+<body>
+
+<canvas id="canvas" width="512px" height="512px" />
+
+<image id="zombiegopher" style="display: none;" src="zombiegopher.png">
+<image id="pupil" style="display: none;" src="pupil.png">
+
+</body>
+</html>

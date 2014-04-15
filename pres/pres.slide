@@ -1,0 +1,179 @@
+Low Level Stuff
+
+14 Apr 2014
+
+Michael Meier
+
+mm@sigsegv.ch
+http://github.com/distributed
+
+
+* About me
+
+- Electrical Engineer working in R&D
+- Mostly I write code
+- Using Go since 2009
+
+I use Go for:
+
+- Personal projects
+- Development and manufacturing tools
+
+* Serial Ports
+
+* sers
+
+.link http://github.com/distributed/sers
+
+- Makes serial ports accessible
+- Works on OS X, Linux and Windows, maybe BSD
+- Works with nonstandard baud rates
+
+
+* Interface
+
+.code snippets.go /sersifacestart OMIT/,/sersifacestop OMIT/
+
+* Discussion
+
+Pros:
+- simple
+- works with nonstandard baud rates
+
+Cons:
+- serial ports are never simple
+- does not implement net.Conn
+
+* What's this baud rate stuff, anyhow?
+
+- Serial ports communicate at fixed rate
+- Baud rate is derived from oscillator
+- Only some rates precisely achievable given oscillator
+
+Typically, hardware generates baud rates as follows:
+baudrate = fosc / (16 * (prescaler + 1))
+
+
+* Standard baud rates
+
+In telecommunications, a set of generally supported baud rates derived from teletypes is used: 110, 9600, 57600 baud etc.
+
+Not everybody is in love with standard baud rates.
+
+Say your hardware runs at 1 MHz:
+
+- Highest baud rate is 62500 baud
+- Highest workable standard baud rate is 4800 baud
+
+Examples:
+
+- Your microcontroller project, i.e. your Arduino
+- MIDI runs at 31250 baud
+- Ad-hoc signal generators
+
+
+* I2C
+
+* I2C
+
+The Inter-Integrated Circuit Bus or I squared C.
+
+- Two wire, serial bus
+- Connects one or more masters with one or more slaves
+- Has 7 or 10 bit address space
+- Typically runs at 100 kHz or 400 kHz
+- Typically spans over tens of centimeters
+
+
+* Where's it used?
+
+- Display Information (DDC) on VGA, DVI and HDMI
+- For system management on your motherboard, called SMBus
+- In your webcam
+- In your cell phone
+- A lot of electronics, really
+
+* How does it look like?
+
+.image I2C.svg
+
+- Devices share 2 signal lines, SCL and SDA, pulled up by resistors
+- SCL is the Serial CLock
+- SDA is Serial DAta
+- Devices can either _let_lines_be_pulled_high_ or _pull_them_low_
+- SCL and SDA are said to be configured as "wired AND"
+- SCL and SDA are only high if every device lets them go high
+
+
+* The Go view
+
+.link http://github.com/distributed/i2cm
+
+.code snippets.go /i2cmasterstart OMIT/,/i2cmasterstop OMIT/
+
+
+* i2cm implementations
+
+There are 2 implementations:
+
+- Using the Bus Pirate, using sers ;)
+- Bindings to the Linux I2C drivers, unreleased
+
+There are other I2C libraries. I have not checked how hard it would be to coerce those implementations into having the i2cm interface.
+
+
+* Hardware
+
+On the breadboard I have an I2C bus connecting:
+
+- 24C02 2kbit EEPROM
+- MCP23008 8-bit I/O Port
+- PCF8591 4 channel 8-bit A/D converter + 1 channel 8 bit D/A converter
+
+The I2C bus master is provided by a Bus Pirate next to the breadboard.
+
+
+* Typical Protocol
+
+.image devprotocol.png
+
+
+* Write example with an I/O Port
+
+.play turnon.go /^func TurnOnLED/,/^}/
+
+
+* Transactions
+
+Almost all protocol scenarios can be covered by this interface:
+
+.code snippets.go /transactstart OMIT/,/transactstop OMIT/
+
+Simplifies the previous example to:
+
+.code snippets.go /transactexamplestart OMIT/,/transactexamplestop OMIT/
+
+Sometimes that's all you get, as with the Linux I2C driver, sometimes that is what's fast, as with the Bus Pirate.
+
+
+
+* EEPROM API
+
+.link http://github.com/distributed/i2cm
+
+.code snippets.go /eestart OMIT/,/eestop OMIT/
+
+
+* Reading EEPROMs
+
+24C02 EEPROM is at 7 bit address 0x50, 8 bit address pair 0xa0 / 0xa1
+
+.play readee.go /^func ReadEE/,/^}/
+
+
+* Reading A/D values
+
+A/D converter
+
+.play readad0.go /^func LoopAD0/,/^}/
+
